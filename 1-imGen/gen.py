@@ -7,28 +7,48 @@
 # =====================================================
 import numpy as np
 import random
+import imageio
+import math
+from matplotlib import pyplot as plt
 
 
-
-def simple(parameters):
-    pass
-
-
-def sincos(parameters):
-    pass
+# ================= IMAGE GENERATION FUNCTIONS ================================
+def simple(parameters, x, y):
+    return x*y + 2*y
 
 
-def root(parameters):
-    pass
+def sincos(parameters, x, y):
+    Q = parameters['Q']
+    return abs(math.cos(x/Q) + 2*math.sin(y/Q))
+
+def root(parameters, x, y):
+    Q = parameters['Q']
+    return abs(3*(x/Q) - (y/Q)**(1./3.))
 
 
-def rand(parameters):
-    pass
+def rand(parameters, x, y):
+    return random.randint(0, 1)
 
 
+# Works a bit differently than the other generation functions
 def randomwalk(parameters):
-    pass
+    C = parameters['C']
+    f = np.zeros((C, C), dtype=float)
 
+    x = 0
+    y = 0
+    f[x, y] = 1
+
+    for _ in range(1+(C*C)):
+        dx = random.choice([-1, 1])
+        dy = random.choice([-1, 1])
+        x = (x + dx) % C
+        y = (y + dy) % C
+        f[x, y] = 1
+
+    return f
+
+# =============================================================================
 
 def sceneImgGen(parameters, f):
     pass
@@ -55,7 +75,8 @@ if __name__ == '__main__':
     parameters['B'] = int(input())
     parameters['S'] = int(input())
 
-
+    # load image
+    # parameters['img'] = imageio.imread(parameters['inputfile'])
 
     # call specified function
     sceneImgGen = {1: simple,
@@ -66,7 +87,24 @@ if __name__ == '__main__':
     }
 
     # generate scene image
-    f = sceneImgGen[sceneImgGenFunc](parameters)
+    C = parameters['C']
+    f = np.zeros((C, C), dtype=float)
+
+    # initialize seed (if ever needed)
+    S = parameters['S']
+    random.seed(S)
+
+    if sceneImgGenFunc == 5: # randomwalk works differently than other functions
+        f = randomwalk(parameters)
+    else:
+        for x in range(C):
+            for y in range(C):
+                f[x, y] = sceneImgGen[sceneImgGenFunc](parameters, x, y)
+
+    # visualization stuff, remove later
+    print(f)
+    plt.imshow(f, cmap='gray')
+    plt.show()
 
     # generate digital image
     g = digitalImgGen(parameters, f)
