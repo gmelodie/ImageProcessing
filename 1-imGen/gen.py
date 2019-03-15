@@ -50,6 +50,17 @@ def randomwalk(parameters):
 
 # =============================================================================
 
+def normalize_img(parameters, img, new_min, new_max):
+    C = parameters['C']
+    old_min = np.min(img)
+    old_max = np.max(img)
+
+    norm_img = (img - old_min) * ((new_max - new_min)/(old_max - old_min)) \
+        + new_min
+
+    return norm_img
+
+
 def sceneImgGen(parameters, f):
     pass
 
@@ -102,12 +113,16 @@ if __name__ == '__main__':
                 f[x, y] = sceneImgGen[sceneImgGenFunc](parameters, x, y)
 
     # visualization stuff, remove later
-    print(f)
-    plt.imshow(f, cmap='gray')
-    plt.show()
+    # print(f)
+    # plt.imshow(f, cmap='gray')
+    # plt.show()
+
+    # normalize scene image
+    norm_f = normalize_img(parameters, f, 0, 2**16 - 1)
+    print(norm_f)
 
     # generate digital image
-    g = digitalImgGen(parameters, f)
+    g = digitalImgGen(parameters, norm_f)
 
     # compare images
     error = compare(parameters, g)
