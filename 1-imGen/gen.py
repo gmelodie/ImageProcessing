@@ -27,7 +27,7 @@ def root(parameters, x, y):
 
 
 def rand(parameters, x, y):
-    return random.randint(0, 1)
+    return random.uniform(0, 1)
 
 
 # Works a bit differently than the other generation functions
@@ -40,8 +40,8 @@ def randomwalk(parameters):
     f[x, y] = 1
 
     for _ in range(1+(C*C)):
-        dx = random.choice([-1, 1])
-        dy = random.choice([-1, 1])
+        dx = random.choice([-1, 0, 1])
+        dy = random.choice([-1, 0, 1])
         x = (x + dx) % C
         y = (y + dy) % C
         f[x, y] = 1
@@ -113,9 +113,9 @@ if __name__ == '__main__':
                 f[x, y] = sceneImgGen[sceneImgGenFunc](parameters, x, y)
 
     # visualization stuff, remove later
-    # print(f)
-    # plt.imshow(f, cmap='gray')
-    # plt.show()
+    print(f)
+    plt.imshow(f, cmap='gray')
+    plt.show()
 
     # normalize scene image
     norm_f = normalize_img(parameters, f, 0, 2**16 - 1)
