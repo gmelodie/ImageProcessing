@@ -61,33 +61,7 @@ def normalize_img(parameters, img, new_min, new_max):
     return norm_img
 
 
-def sceneImgGen(parameters, f):
-    pass
-
-
-def digitalImgGen(parameters, g):
-    pass
-
-
-def compare(parameters, g):
-    pass
-
-
-if __name__ == '__main__':
-
-    parameters = {}
-
-    # read input parameters
-    parameters['inputfile'] = str(input())
-    parameters['C'] = int(input())
-    sceneImgGenFunc = int(input())
-    parameters['Q'] = int(input())
-    parameters['N'] = int(input())
-    parameters['B'] = int(input())
-    parameters['S'] = int(input())
-
-    # load image
-    # parameters['img'] = imageio.imread(parameters['inputfile'])
+def sceneImgGen(parameters):
 
     # call specified function
     sceneImgGen = {1: simple,
@@ -97,14 +71,16 @@ if __name__ == '__main__':
                    5: randomwalk,
     }
 
-    # generate scene image
+    # Load variables, for reading's sake
+    sceneImgGenFunc = parameters['sceneImgGenFunc']
     C = parameters['C']
+    S = parameters['S']
     f = np.zeros((C, C), dtype=float)
 
     # initialize seed (if ever needed)
-    S = parameters['S']
     random.seed(S)
 
+    # Actual img generation
     if sceneImgGenFunc == 5: # randomwalk works differently than other functions
         f = randomwalk(parameters)
     else:
@@ -119,6 +95,42 @@ if __name__ == '__main__':
 
     # normalize scene image
     norm_f = normalize_img(parameters, f, 0, 2**16 - 1)
+
+    return norm_f
+
+
+def digitalImgGen(parameters, f):
+    pass
+
+
+def compare(parameters, g):
+    pass
+
+
+def read_input():
+    parameters = {}
+    parameters['inputfile'] = str(input())
+    parameters['C'] = int(input())
+    parameters['sceneImgGenFunc'] = int(input())
+    parameters['Q'] = int(input())
+    parameters['N'] = int(input())
+    parameters['B'] = int(input())
+    parameters['S'] = int(input())
+    return parameters
+
+
+if __name__ == '__main__':
+
+    parameters = read_input()
+
+    # load image
+    parameters['img'] = np.load(parameters['inputfile'])
+    # test if img reading is fine
+    plt.imshow(parameters['img'], cmap='gray')
+    plt.show()
+
+    # generate normalized scene image
+    norm_f = sceneImgGen(parameters)
     print(norm_f)
 
     # generate digital image
