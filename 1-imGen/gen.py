@@ -40,8 +40,8 @@ def randomwalk(parameters):
     f[x, y] = 1
 
     for _ in range(1+(C*C)):
-        dx = random.choice([-1, 0, 1])
-        dy = random.choice([-1, 0, 1])
+        dx = random.randint(-1, 1)
+        dy = random.randint(-1, 1)
         x = (x + dx) % C
         y = (y + dy) % C
         f[x, y] = 1
@@ -89,9 +89,9 @@ def sceneImgGen(parameters):
                 f[x, y] = sceneImgGen[sceneImgGenFunc](parameters, x, y)
 
     # visualization stuff, remove later
-    print(f)
-    plt.imshow(f, cmap='gray')
-    plt.show()
+    # print(f)
+    # plt.imshow(f, cmap='gray')
+    # plt.show()
 
     # normalize scene image
     norm_f = normalize_img(parameters, f, 0, 2**16 - 1)
@@ -101,9 +101,19 @@ def sceneImgGen(parameters):
 
 def digitalImgGen(parameters, f):
     N = parameters['N']
-    # don't know how to specify type for arbitrary number of bits
-    g = np.zeros((N, N), dtype=)
-    pass
+    C = parameters['C']
+    g = np.zeros((N, N), dtype=np.uint8)
+
+    # Downsampling
+    dsampled_f = f[::int(C/N), ::int(C/N)]
+    print('Size of dsampled is', dsampled_f.shape)
+
+    # visualization stuff, remove later
+    plt.imshow(dsampled_f, cmap='gray')
+    plt.show()
+
+
+    return g
 
 
 def compare(parameters, g):
@@ -134,7 +144,7 @@ if __name__ == '__main__':
 
     # generate normalized scene image
     norm_f = sceneImgGen(parameters)
-    print(norm_f)
+    # print(norm_f)
 
     # generate digital image
     g = digitalImgGen(parameters, norm_f)
