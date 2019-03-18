@@ -100,6 +100,9 @@ def sceneImgGen(parameters):
 
 
 def digitalImgGen(parameters, f):
+    N = parameters['N']
+    # don't know how to specify type for arbitrary number of bits
+    g = np.zeros((N, N), dtype=)
     pass
 
 
