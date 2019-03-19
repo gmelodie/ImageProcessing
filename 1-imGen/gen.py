@@ -50,8 +50,7 @@ def randomwalk(parameters):
 
 # =============================================================================
 
-def normalize_img(parameters, img, new_min, new_max):
-    C = parameters['C']
+def normalize_img(img, new_min, new_max):
     old_min = np.min(img)
     old_max = np.max(img)
 
@@ -94,24 +93,40 @@ def sceneImgGen(parameters):
     # plt.show()
 
     # normalize scene image
-    norm_f = normalize_img(parameters, f, 0, 2**16 - 1)
+    norm_f = normalize_img(f, 0, 2**16 - 1)
 
     return norm_f
+
+
+def downsample(f, C, N):
+    dsampled_f = np.zeros((N, N), dtype=float)
+    ratio = C/N
+
+    # rounds  if ratio is non integer
+    # ratio = 1.4
+    # dsampled_f[3, 2] = f[4, 3]
+    for x in range(N):
+        for y in range(N):
+            dsampled_f[x, y] = f[round(ratio*x), round(ratio*y)]
+
+    return dsampled_f
 
 
 def digitalImgGen(parameters, f):
     N = parameters['N']
     C = parameters['C']
-    g = np.zeros((N, N), dtype=np.uint8)
+    B = parameters['B']
 
     # Downsampling
-    dsampled_f = f[::int(C/N), ::int(C/N)]
-    print('Size of dsampled is', dsampled_f.shape)
+    dsampled_f = downsample(f, C, N)
+
+    # Quantisation
+    g = normalize_img(dsampled_f, 0, 2**8 - 1).astype(np.uint8)
+    g = np.right_shift(g, 8 - B) # shift to use only B most significant bits
 
     # visualization stuff, remove later
-    plt.imshow(dsampled_f, cmap='gray')
+    plt.imshow(g, cmap='gray')
     plt.show()
-
 
     return g
 
@@ -144,7 +159,6 @@ if __name__ == '__main__':
 
     # generate normalized scene image
     norm_f = sceneImgGen(parameters)
-    # print(norm_f)
 
     # generate digital image
     g = digitalImgGen(parameters, norm_f)
