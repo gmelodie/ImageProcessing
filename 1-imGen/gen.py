@@ -30,7 +30,6 @@ def rand(parameters, x, y):
     return random.uniform(0, 1)
 
 
-# Works a bit differently than the other generation functions
 def randomwalk(parameters):
     C = parameters['C']
     f = np.zeros((C, C), dtype=float)
@@ -51,8 +50,9 @@ def randomwalk(parameters):
 # =============================================================================
 
 def normalize_img(img, new_min, new_max):
-    old_min = np.min(img)
-    old_max = np.max(img)
+
+    old_min=np.min(img)
+    old_max=np.max(img)
 
     norm_img = (img - old_min) * ((new_max - new_min)/(old_max - old_min)) \
         + new_min
@@ -80,20 +80,16 @@ def sceneImgGen(parameters):
     random.seed(S)
 
     # Actual img generation
-    if sceneImgGenFunc == 5: # randomwalk works differently than other functions
+    if sceneImgGenFunc == 5: # randomwalk can't be iterated independently
         f = randomwalk(parameters)
     else:
         for x in range(C):
             for y in range(C):
                 f[x, y] = sceneImgGen[sceneImgGenFunc](parameters, x, y)
 
-    # visualization stuff, remove later
-    # print(f)
-    # plt.imshow(f, cmap='gray')
-    # plt.show()
-
     # normalize scene image
     norm_f = normalize_img(f, 0, 2**16 - 1)
+
 
     return norm_f
 
@@ -124,7 +120,7 @@ def digitalImgGen(parameters, f):
     g = normalize_img(dsampled_f, 0, 2**8 - 1).astype(np.uint8)
     g = np.right_shift(g, 8 - B) # shift to use only B most significant bits
 
-    # visualization stuff, remove later
+    # Visualization stuff, remove later
     plt.imshow(g, cmap='gray')
     plt.show()
 
@@ -138,13 +134,18 @@ def compare(parameters, g):
 
 def read_input():
     parameters = {}
-    parameters['inputfile'] = str(input())
+
+    # load image
+    inputfile = str(input())
+    parameters['img'] = np.load(inputfile)
+
     parameters['C'] = int(input())
     parameters['sceneImgGenFunc'] = int(input())
     parameters['Q'] = int(input())
     parameters['N'] = int(input())
     parameters['B'] = int(input())
     parameters['S'] = int(input())
+
     return parameters
 
 
@@ -152,8 +153,6 @@ if __name__ == '__main__':
 
     parameters = read_input()
 
-    # load image
-    parameters['img'] = np.load(parameters['inputfile'])
     # test if img reading is fine
     plt.imshow(parameters['img'], cmap='gray')
     plt.show()
