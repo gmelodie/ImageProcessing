@@ -132,7 +132,8 @@ def digitalImgGen(parameters, f):
 
 
 def compare(parameters, g):
-    pass
+    r = parameters['img']
+    return np.sqrt(np.mean(np.square(g - r)))
 
 
 def read_input():
