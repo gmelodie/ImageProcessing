@@ -7,55 +7,59 @@
 # =====================================================
 import numpy as np
 import random
+import imageio
+import math
 
 
-
-def simple(parameters):
-    pass
-
-
-def sincos(parameters):
-    pass
+# ================= IMAGE GENERATION FUNCTIONS ================================
+def simple(parameters, x, y):
+    return x*y + 2*y
 
 
-def root(parameters):
-    pass
+def sincos(parameters, x, y):
+    Q = parameters['Q']
+    return abs(math.cos(x/Q) + 2*math.sin(y/Q))
+
+def root(parameters, x, y):
+    Q = parameters['Q']
+    return abs(3*(x/Q) - (y/Q)**(1./3.))
 
 
-def rand(parameters):
-    pass
+def rand(parameters, x, y):
+    return random.random()
 
 
 def randomwalk(parameters):
-    pass
+    C = parameters['C']
+    f = np.zeros((C, C), dtype=float)
+
+    x = 0
+    y = 0
+    f[x, y] = 1
+
+    for _ in range(1+(C*C)):
+        dx = random.randint(-1, 1)
+        dy = random.randint(-1, 1)
+        x = (x + dx) % C
+        y = (y + dy) % C
+        f[x, y] = 1
+
+    return f
+
+# =============================================================================
+
+def normalize_img(img, new_min, new_max):
+
+    old_min=np.min(img)
+    old_max=np.max(img)
+
+    norm_img = (img - old_min) * ((new_max - new_min)/(old_max - old_min)) \
+        + new_min
+
+    return norm_img
 
 
-def sceneImgGen(parameters, f):
-    pass
-
-
-def digitalImgGen(parameters, g):
-    pass
-
-
-def compare(parameters, g):
-    pass
-
-
-if __name__ == '__main__':
-
-    parameters = {}
-
-    # read input parameters
-    parameters['inputfile'] = str(input())
-    parameters['C'] = int(input())
-    sceneImgGenFunc = int(input())
-    parameters['Q'] = int(input())
-    parameters['N'] = int(input())
-    parameters['B'] = int(input())
-    parameters['S'] = int(input())
-
-
+def sceneImgGen(parameters):
 
     # call specified function
     sceneImgGen = {1: simple,
@@ -65,11 +69,89 @@ if __name__ == '__main__':
                    5: randomwalk,
     }
 
-    # generate scene image
-    f = sceneImgGen[sceneImgGenFunc](parameters)
+    # Load variables, for reading's sake
+    sceneImgGenFunc = parameters['sceneImgGenFunc']
+    C = parameters['C']
+    S = parameters['S']
+    f = np.zeros((C, C), dtype=float)
+
+    # initialize seed (if ever needed)
+    random.seed(S)
+
+    # Actual img generation
+    if sceneImgGenFunc == 5: # randomwalk can't be iterated independently
+        f = randomwalk(parameters)
+    else:
+        for x in range(C):
+            for y in range(C):
+                f[x, y] = sceneImgGen[sceneImgGenFunc](parameters, x, y)
+
+    # normalize scene image
+    norm_f = normalize_img(f, 0, 2**16 - 1)
+
+
+    return norm_f
+
+
+def downsample(f, C, N):
+    dsampled_f = np.zeros((N, N), dtype=float)
+    ratio = C/N
+
+    # rounds  if ratio is non integer
+    # ratio = 1.4
+    # dsampled_f[3, 2] = f[4, 3]
+    for x in range(N):
+        for y in range(N):
+            dsampled_f[x, y] = f[round(ratio*x), round(ratio*y)]
+
+    return dsampled_f
+
+
+def digitalImgGen(parameters, f):
+    N = parameters['N']
+    C = parameters['C']
+    B = parameters['B']
+
+    # Downsampling
+    dsampled_f = downsample(f, C, N)
+
+    # Quantisation
+    g = normalize_img(dsampled_f, 0, 2**8 - 1).astype(np.uint8)
+    g = np.right_shift(g, 8 - B) # shift to use only B most significant bits
+
+
+    return g
+
+
+def compare(parameters, g):
+    r = parameters['img']
+    return np.sqrt(np.mean(np.square(g - r)))
+
+
+def read_input():
+    parameters = {}
+    parameters['inputfile'] = str(input().rstrip())
+    parameters['C'] = int(input().rstrip())
+    parameters['sceneImgGenFunc'] = int(input().rstrip())
+    parameters['Q'] = int(input().rstrip())
+    parameters['N'] = int(input().rstrip())
+    parameters['B'] = int(input().rstrip())
+    parameters['S'] = int(input().rstrip())
+    return parameters
+
+
+if __name__ == '__main__':
+
+    parameters = read_input()
+
+    # load image
+    parameters['img'] = np.load(parameters['inputfile'])
+
+    # generate normalized scene image
+    norm_f = sceneImgGen(parameters)
 
     # generate digital image
-    g = digitalImgGen(parameters, f)
+    g = digitalImgGen(parameters, norm_f)
 
     # compare images
     error = compare(parameters, g)
