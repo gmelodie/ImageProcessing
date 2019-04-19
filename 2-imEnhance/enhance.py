@@ -10,7 +10,6 @@ import numpy as np
 import imageio
 
 
-# TODO: check this function for correctness
 def compute_error(reference, generated):
     return np.sqrt(np.mean(np.square(generated - reference)))
 
@@ -19,7 +18,7 @@ def read_params():
     params = {}
 
     # read filename
-    params['reference'] = input()
+    params['reference'] = input().rstrip()
 
     params['choice'] = int(input())
     choice = params['choice']
@@ -76,15 +75,16 @@ def convolve2d(img, mask, pad_size):
 
 
 def get_neighbors(img, i, j):
-    neigh = np.zeros(8)
+    neigh = np.zeros(9)
     neigh[0] = img[i-1][j-1]
     neigh[1] = img[i-1][j]
     neigh[2] = img[i-1][j+1]
     neigh[3] = img[i][j-1]
-    neigh[4] = img[i][j+1]
-    neigh[5] = img[i+1][j-1]
-    neigh[6] = img[i+1][j]
-    neigh[7] = img[i+1][j+1]
+    neigh[4] = img[i][j]
+    neigh[5] = img[i][j+1]
+    neigh[6] = img[i+1][j-1]
+    neigh[7] = img[i+1][j]
+    neigh[8] = img[i+1][j+1]
 
     return neigh
 
