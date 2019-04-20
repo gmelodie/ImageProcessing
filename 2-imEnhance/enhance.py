@@ -74,26 +74,25 @@ def convolve2d(img, mask, pad_size):
     return ans
 
 
-def get_neighbors(img, i, j):
-    neigh = np.zeros(9)
-    neigh[0] = img[i-1][j-1]
-    neigh[1] = img[i-1][j]
-    neigh[2] = img[i-1][j+1]
-    neigh[3] = img[i][j-1]
-    neigh[4] = img[i][j]
-    neigh[5] = img[i][j+1]
-    neigh[6] = img[i+1][j-1]
-    neigh[7] = img[i+1][j]
-    neigh[8] = img[i+1][j+1]
+def get_median_neigh(img, i, j, shift):
+    neigh = []
 
-    return neigh
+    for x in range(i-shift, i+shift+1):
+        for y in range(j-shift, j+shift+1):
+            neigh.append(img[x][y])
+
+    neigh.sort()
+    neigh_mid = int(len(neigh) // 2) + 1
+    return neigh[neigh_mid]
 
 
 def convolve_median(pad_img, pad_size):
     ans = np.zeros((pad_img.shape[0]-2*pad_size, pad_img.shape[1]-2*pad_size))
+
     for i in range(pad_size, pad_img.shape[0] - pad_size):
         for j in range(pad_size, pad_img.shape[1] - pad_size):
-            ans[i-pad_size][j-pad_size] = np.median(get_neighbors(pad_img, i, j))
+            ans[i-pad_size][j-pad_size] = get_median_neigh(pad_img, i, j, pad_size)
+
     return ans
 
 
