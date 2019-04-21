@@ -9,8 +9,19 @@
 import numpy as np
 import imageio
 
+def normalize(img, new_min, new_max):
+
+    old_min=np.min(img)
+    old_max=np.max(img)
+
+    norm_img = (img - old_min) * ((new_max - new_min)/(old_max - old_min)) \
+        + new_min
+
+    return norm_img
+
 
 def compute_error(reference, generated):
+    generated = normalize(generated, 0, 255)
     return np.sqrt(np.mean(np.square(generated - reference)))
 
 
@@ -194,7 +205,7 @@ if __name__ == '__main__':
     generated = methods[params['choice']](params)
     reference = imageio.imread(params['reference'])
 
-    print('{0:.2f}'.format(compute_error(reference, generated)))
+    print('{0:.4f}'.format(compute_error(reference, generated)))
 
 
 
