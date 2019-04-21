@@ -137,7 +137,8 @@ def limiarization(params, other_img=None):
         cur_th = 0.5 * (np.mean(higher) + np.mean(lower))
 
     # Apply calculated threshold
-    img[img < cur_th] = 0
+    img[img <= cur_th] = 0
+    img[img > cur_th] = 1
 
     return img
 
