@@ -10,7 +10,6 @@ import numpy as np
 import imageio
 
 def normalize(img, new_min, new_max):
-
     old_min=np.min(img)
     old_max=np.max(img)
 
@@ -21,7 +20,7 @@ def normalize(img, new_min, new_max):
 
 
 def compute_error(reference, generated):
-    generated = normalize(generated, 0, 255)
+    generated = normalize(generated, 0, 2**8 - 1)
     return np.sqrt(np.mean(np.square(generated - reference)))
 
 
@@ -59,14 +58,19 @@ def read_params():
 
 def convolve1d(img, mask, mask_size):
     mask_half = int(mask_size // 2)
+    ans = np.zeros(len(img))
 
     for i in range(len(img)):
         s = 0
-        for j in range(-mask_half, mask_half):
-            s += img[i - mask_half + j]
-        img[i] = s
+        for j in range(-mask_half, mask_half+1):
+            if i + j < 0:
+                idx = i + j
+            else:
+                idx = (i + j) % len(img)
+            s += img[idx] * mask[j+mask_half]
+        ans[idx] = s
 
-    return img
+    return ans
 
 
 def convolve2d(img, mask, pad_size):
@@ -206,9 +210,5 @@ if __name__ == '__main__':
     reference = imageio.imread(params['reference'])
 
     print('{0:.4f}'.format(compute_error(reference, generated)))
-
-
-
-
 
 
