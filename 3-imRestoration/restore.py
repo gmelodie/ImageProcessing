@@ -30,7 +30,7 @@ def read_params():
 
     params['reference'] = input().rstrip()
     params['degradated'] = input().rstrip()
-    filter_choice = input().rstrip()
+    filter_choice = int(input().rstrip())
     params['gamma'] = float(input().rstrip())
 
     # Size of kernel if denoising
@@ -53,12 +53,12 @@ def read_params():
 #========================= FILTERING FUNCTIONS ===========================
 
 
-def denoising():
+def denoising(params):
     # TODO: normalize image in the end (same max as image g)
     pass
 
 
-def deblurring():
+def deblurring(params):
     pass
 
 
