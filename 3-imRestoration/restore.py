@@ -54,8 +54,12 @@ def read_params():
 
 
 def denoising(params):
-    # TODO: normalize image in the end (same max as image g)
-    pass
+    degradated = imageio.imread(params['degradated'])
+    generated = imageio.imread(params['degradated'])
+
+
+
+    return normalize(generated, 0, max(degradated))
 
 
 def deblurring(params):
