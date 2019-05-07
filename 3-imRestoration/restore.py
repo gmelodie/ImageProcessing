@@ -57,7 +57,10 @@ def denoising(params):
     degradated = imageio.imread(params['degradated'])
     generated = imageio.imread(params['degradated'])
 
-
+    # TODO: something like this, not exaclty
+    for x in range(generated.shape[0]):
+        for y in range(generated.shape[1]):
+            dispn = dispersion(x, y, degradated)
 
     return normalize(generated, 0, max(degradated))
 
