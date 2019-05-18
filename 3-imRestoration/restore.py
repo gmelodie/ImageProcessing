@@ -35,7 +35,7 @@ def read_params():
 
     # Size of kernel if denoising
     # Size of degradation function if deblurring
-    params['size'] = int(input().rstrip())
+    params['size_k'] = int(input().rstrip())
 
     # Filter choice comes as integer, assign function
     if filter_choice == 1:
@@ -51,41 +51,62 @@ def read_params():
 
 
 
-#========================= AUX FUNCTIONS ===========================
+#========================= DENOISING AUX FUNCTIONS ===========================
 
-# calculates disp_n
-def general_dispersion():
-    ans = 0
+def local_disp_centr(x, y, image, disp_n, size_k, mode):
+    """
+    Returns a tuple: (disp_l, centr_l)
+    """
 
-    if ans == 0:
-        return 1
-
-    return ans
-
-
-# calculates disp_l
-def local_dispersion(x, y, image, disp_n):
-    ans = 0
-
-    if ans == 0:
-        return disp_n
-
-    return ans
-
-
-# calculates centr_l
-def local_centralization(x, y, image, mode):
-    ans = 0
+    border_pixels = image[x-size_k : x+size_k+1, y-size_k : y+size_k+1]
 
     if mode == 'robust':
-        pass
+        percentiles = np.percentile(border_pixels, [75, 50, 25])
+        disp_l = percentiles[2] - percentiles[0] # interquartile range
+        centr_l = percentiles[1] # the 50 percentile is the median
     elif mode == 'average':
-        pass
+        disp_l = np.std(border_pixels)
+        centr_l = np.mean(border_pixels)
     else:
-        raise ValueError('Invalid centralization mode')
+        raise ValueError('Invalid denoising mode')
 
-    return ans
+    if disp_l == 0:
+        disp_l = disp_n
 
+    return disp_l, centr_l
+
+
+def general_dispersion(image, mode):
+    """
+    Returns disp_n calculated related to the borders of the image
+    """
+    # border paddings
+    rows = image.shape[0]
+    cols = image.shape[1]
+    m = rows//6
+    n = cols//6
+
+    # border arrays
+    right = image[::, 0:n].flatten()
+    left = image[::, cols-n:cols].flatten()
+    top = image[0:m, ::].flatten()
+    bot = image[rows-m:rows, ::].flatten()
+
+    border_pixels = np.concatenate((right, left, top, bot))
+
+    # calculate dispersion measure according to mode
+    if mode == 'robust':
+        percentiles = np.percentile(border_pixels, [75, 50, 25])
+        disp_n = percentiles[2] - percentiles[0]
+    elif mode == 'average':
+        disp_n = np.std(border_pixels)
+    else:
+        raise ValueError('Invalid denoising mode')
+
+    if disp_n == 0:
+        return 1
+
+    return disp_n
 
 
 #========================= FILTERING FUNCTIONS ===========================
@@ -98,14 +119,17 @@ def denoising(params):
     # unpack parameters
     gamma = params['gamma']
     mode = params['denoising_mode']
+    size_k = params['size_k']
 
-    disp_n = general_dispersion(degradated)
+    disp_n = general_dispersion(degradated, mode)
 
-    for x in range(generated.shape[0]/6, generated.shape[0] - generated.shape[0]/6):
-        for y in range(generated.shape[1]/6, generated.shape[1] - generated.shape[1]/6):
-            disp_l = local_dispersion(x, y, degradated)
-            centr_l = local_centralization(x, y, degradated, mode)
-            generated[x][y] = degradated[x][y] - (gamma * (disp_n/disp_l) * (degradated[x][y] - centr_l))
+    for x in range(generated.shape[0]//6, \
+                       generated.shape[0] - generated.shape[0]//6):
+        for y in range(generated.shape[1]//6, \
+                       generated.shape[1] - generated.shape[1]//6):
+            disp_l, centr_l = local_disp_centr(x, y, degradated, size_k, mode)
+            generated[x][y] = degradated[x][y] \
+                    - (gamma * (disp_n/disp_l) * (degradated[x][y] - centr_l))
 
     return normalize(generated, 0, max(degradated))
 
