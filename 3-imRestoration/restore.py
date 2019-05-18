@@ -58,7 +58,7 @@ def local_disp_centr(x, y, image, disp_n, size_k, mode):
     Returns a tuple: (disp_l, centr_l)
     """
 
-    border_pixels = image[x-size_k : x+size_k+1, y-size_k : y+size_k+1]
+    border_pixels = image[x-size_k//2 : x+size_k//2+1, y-size_k//2 : y+size_k//2+1]
 
     if mode == 'robust':
         percentiles = np.percentile(border_pixels, [75, 50, 25])
@@ -120,13 +120,14 @@ def denoising(params):
     gamma = params['gamma']
     mode = params['denoising_mode']
     size_k = params['size_k']
+    border_ignore_size = size_k//2
 
     disp_n = general_dispersion(degradated, mode)
 
-    for x in range(generated.shape[0]//6, \
-                       generated.shape[0] - generated.shape[0]//6):
-        for y in range(generated.shape[1]//6, \
-                       generated.shape[1] - generated.shape[1]//6):
+    for x in range(generated.shape[0]//border_ignore_size, \
+                       generated.shape[0] - generated.shape[0]//border_ignore_size):
+        for y in range(generated.shape[1]//border_ignore_size, \
+                       generated.shape[1] - generated.shape[1]//border_ignore_size):
             disp_l, centr_l = \
                 local_disp_centr(x, y, degradated, disp_n, size_k, mode)
             generated[x][y] = degradated[x][y] \
