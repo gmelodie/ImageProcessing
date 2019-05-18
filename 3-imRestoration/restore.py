@@ -50,6 +50,44 @@ def read_params():
     return params
 
 
+
+#========================= AUX FUNCTIONS ===========================
+
+# calculates disp_n
+def general_dispersion():
+    ans = 0
+
+    if ans == 0:
+        return 1
+
+    return ans
+
+
+# calculates disp_l
+def local_dispersion(x, y, image, disp_n):
+    ans = 0
+
+    if ans == 0:
+        return disp_n
+
+    return ans
+
+
+# calculates centr_l
+def local_centralization(x, y, image, mode):
+    ans = 0
+
+    if mode == 'robust':
+        pass
+    elif mode == 'average':
+        pass
+    else:
+        raise ValueError('Invalid centralization mode')
+
+    return ans
+
+
+
 #========================= FILTERING FUNCTIONS ===========================
 
 
@@ -57,10 +95,17 @@ def denoising(params):
     degradated = imageio.imread(params['degradated'])
     generated = imageio.imread(params['degradated'])
 
-    # TODO: something like this, not exaclty
-    for x in range(generated.shape[0]):
-        for y in range(generated.shape[1]):
-            dispn = dispersion(x, y, degradated)
+    # unpack parameters
+    gamma = params['gamma']
+    mode = params['denoising_mode']
+
+    disp_n = general_dispersion(degradated)
+
+    for x in range(generated.shape[0]/6, generated.shape[0] - generated.shape[0]/6):
+        for y in range(generated.shape[1]/6, generated.shape[1] - generated.shape[1]/6):
+            disp_l = local_dispersion(x, y, degradated)
+            centr_l = local_centralization(x, y, degradated, mode)
+            generated[x][y] = degradated[x][y] - (gamma * (disp_n/disp_l) * (degradated[x][y] - centr_l))
 
     return normalize(generated, 0, max(degradated))
 
