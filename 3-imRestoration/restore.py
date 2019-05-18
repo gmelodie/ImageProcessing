@@ -127,11 +127,12 @@ def denoising(params):
                        generated.shape[0] - generated.shape[0]//6):
         for y in range(generated.shape[1]//6, \
                        generated.shape[1] - generated.shape[1]//6):
-            disp_l, centr_l = local_disp_centr(x, y, degradated, size_k, mode)
+            disp_l, centr_l = \
+                local_disp_centr(x, y, degradated, disp_n, size_k, mode)
             generated[x][y] = degradated[x][y] \
                     - (gamma * (disp_n/disp_l) * (degradated[x][y] - centr_l))
 
-    return normalize(generated, 0, max(degradated))
+    return normalize(generated, 0, np.max(degradated))
 
 
 def deblurring(params):
@@ -146,7 +147,7 @@ if __name__ == '__main__':
     reference = imageio.imread(params['reference'])
     error = compute_error(reference, generated)
 
-    print('{0:.3f}', format(error))
+    print('{0:.3f}'.format(error))
 
 
 
