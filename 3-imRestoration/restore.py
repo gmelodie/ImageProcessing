@@ -7,7 +7,7 @@
 # =====================================================
 
 import numpy as np
-import scipy
+from scipy import fftpack
 import imageio
 
 
@@ -43,7 +43,7 @@ def read_params():
         params['denoising_mode'] = input().rstrip()
     elif filter_choice == 2:
         params['filter_func'] = deblurring
-        params['sigma'] = int(input().rstrip())
+        params['sigma'] = float(input().rstrip())
     else:
         raise ValueError('Filter choice must be either 1 or 2')
 
@@ -128,8 +128,10 @@ def build_lapl_op(img_dimensions):
     lapl_op = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]])
 
     # pad so it is the same size as the image
+    # considering img_dimensions are always even, never odd
     pad_dimensions = (img_dimensions[0]//2 - 1, img_dimensions[1]//2 - 1)
-    pad_lapl_op = np.pad(l, pad_dimensions, 'constant', constant_values=0)
+    print(pad_dimensions)
+    pad_lapl_op = np.pad(lapl_op, pad_dimensions, 'constant', constant_values=0)
 
     return pad_lapl_op
 
@@ -167,10 +169,11 @@ def deblurring(params):
     sigma = params['sigma']
     gamma = params['gamma']
     degradated = imageio.imread(params['degradated'])
+    fft_degradated = fftpack.fft2(degradated)
 
     # prepare degradation function
     degrad_func = gaussian_filter()
-    fft_degrad_func = scipy.fftpack.fft2d(degrad_func)
+    fft_degrad_func = fftpack.fft2(degrad_func)
     prep_degrad_func = np.square(np.abs(fft_degrad_func))
 
     # also prepare complex conjugate
@@ -178,11 +181,15 @@ def deblurring(params):
 
     # prepare laplatian operator
     lapl_op = build_lapl_op(degradated.shape)
-    fft_lapl_op = scipy.fftpack.fft2d(lapl_op)
+    fft_lapl_op = fftpack.fft2(lapl_op)
     prep_lapl_op = np.square(np.abs(fft_lapl_op))
 
+    print(conjugate_fft_degrad_func.shape)
+    print(prep_degrad_func.shape)
+    print(prep_lapl_op.shape)
+    print(fft_degradated.shape)
     generated = ( conjugate_fft_degrad_func \
-                / (prep_degrad_func + gamma*prep_lapl_op)) \
+                / (prep_degrad_func + gamma*prep_lapl_op) ) \
                 * fft_degradated
 
     return generated
