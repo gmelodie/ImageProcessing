@@ -3,7 +3,7 @@
 # NUSP: 9763043
 # Course code: SCC0251
 # Period: 2019/1
-# Assignment 2: IMAGE ENHANCEMENT
+# Assignment 3: IMAGE FILTERING
 # =====================================================
 
 import numpy as np
@@ -109,6 +109,31 @@ def general_dispersion(image, mode):
     return disp_n
 
 
+
+#======================= DEBLURRING AUX FUNCTIONS =========================
+
+
+def gaussian_filter(k=3, sigma=1.0):
+    arx = np.arange((-k//2) + 1.0, (k//2) + 1.0)
+    x, y = np.meshgrid(arx, arx)
+    filt = np.exp( -(1/2)*(np.square(x) + np.square(y))/np.square(sigma))
+
+    return filt/np.sum(filt)
+
+
+def build_lapl_op(img_dimensions):
+    """
+    Build laplatian kernel and pad it to fit image dimensions
+    """
+    lapl_op = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]])
+
+    # pad so it is the same size as the image
+    pad_dimensions = (img_dimensions[0]//2 - 1, img_dimensions[1]//2 - 1)
+    pad_lapl_op = np.pad(l, pad_dimensions, 'constant', constant_values=0)
+
+    return pad_lapl_op
+
+
 #========================= FILTERING FUNCTIONS ===========================
 
 
@@ -137,7 +162,30 @@ def denoising(params):
 
 
 def deblurring(params):
-    pass
+
+    # unpack parameters
+    sigma = params['sigma']
+    gamma = params['gamma']
+    degradated = imageio.imread(params['degradated'])
+
+    # prepare degradation function
+    degrad_func = gaussian_filter()
+    fft_degrad_func = scipy.fftpack.fft2d(degrad_func)
+    prep_degrad_func = np.square(np.abs(fft_degrad_func))
+
+    # also prepare complex conjugate
+    conjugate_fft_degrad_func = np.conjugate(fft_degrad_func)
+
+    # prepare laplatian operator
+    lapl_op = build_lapl_op(degradated.shape)
+    fft_lapl_op = scipy.fftpack.fft2d(lapl_op)
+    prep_lapl_op = np.square(np.abs(fft_lapl_op))
+
+    generated = ( conjugate_fft_degrad_func \
+                / (prep_degrad_func + gamma*prep_lapl_op)) \
+                * fft_degradated
+
+    return generated
 
 
 if __name__ == '__main__':
