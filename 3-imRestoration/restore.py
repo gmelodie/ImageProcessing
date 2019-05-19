@@ -121,19 +121,25 @@ def gaussian_filter(k=3, sigma=1.0):
     return filt/np.sum(filt)
 
 
-def build_lapl_op(img_dimensions):
+def pad_mask(mask, img_dimensions):
     """
-    Build laplatian kernel and pad it to fit image dimensions
+    Pad a matrix (mask) to be the same size as img_dimensions
     """
-    lapl_op = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]])
+    # Assume both dimensions are even
+    pad_dimensions = [(img_dimensions[0]//2 - 2, img_dimensions[0]//2 - 1), \
+                      (img_dimensions[1]//2 - 2, img_dimensions[1]//2 - 1)]
 
-    # pad so it is the same size as the image
-    # considering img_dimensions are always even, never odd
-    pad_dimensions = (img_dimensions[0]//2 - 1, img_dimensions[1]//2 - 1)
-    print(pad_dimensions)
-    pad_lapl_op = np.pad(lapl_op, pad_dimensions, 'constant', constant_values=0)
+    # Check if dimensions are odd (initial assumption was wrong
+    if img_dimensions[0] % 2 != 0:
+        pad_dimensions[0] = (img_dimensions[0]//2-1, img_dimensions[0]//2-1)
 
-    return pad_lapl_op
+    if img_dimensions[1] % 2 != 0:
+        pad_dimensions[1] = (img_dimensions[1]//2-1, img_dimensions[1]//2-1)
+
+
+    pad_mask = np.pad(mask, pad_dimensions, 'constant', constant_values=0)
+
+    return pad_mask
 
 
 #========================= FILTERING FUNCTIONS ===========================
@@ -173,26 +179,26 @@ def deblurring(params):
 
     # prepare degradation function
     degrad_func = gaussian_filter()
-    fft_degrad_func = fftpack.fft2(degrad_func)
+    pad_degrad_func = pad_mask(degrad_func, degradated.shape)
+    fft_degrad_func = fftpack.fft2(pad_degrad_func)
     prep_degrad_func = np.square(np.abs(fft_degrad_func))
 
     # also prepare complex conjugate
     conjugate_fft_degrad_func = np.conjugate(fft_degrad_func)
 
     # prepare laplatian operator
-    lapl_op = build_lapl_op(degradated.shape)
-    fft_lapl_op = fftpack.fft2(lapl_op)
+    lapl_op = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]])
+    pad_lapl_op = pad_mask(lapl_op, degradated.shape)
+    fft_lapl_op = fftpack.fft2(pad_lapl_op)
     prep_lapl_op = np.square(np.abs(fft_lapl_op))
 
-    print(conjugate_fft_degrad_func.shape)
-    print(prep_degrad_func.shape)
-    print(prep_lapl_op.shape)
-    print(fft_degradated.shape)
     generated = ( conjugate_fft_degrad_func \
                 / (prep_degrad_func + gamma*prep_lapl_op) ) \
                 * fft_degradated
 
-    return generated
+    generated = np.real(fftpack.fftshift(fftpack.ifft2(generated)))
+
+    return normalize(generated, 0, np.max(degradated))
 
 
 if __name__ == '__main__':
