@@ -21,7 +21,8 @@ def normalize(img, new_min, new_max):
 
 
 def compute_error(reference, generated):
-    return np.sqrt(np.mean(np.square(generated - reference)))
+    return np.sqrt(np.mean(np.square(generated.astype(float) - \
+                                     reference.astype(float))))
 
 
 def read_params():
@@ -97,6 +98,9 @@ if __name__ == '__main__':
     # call processing function
     option = params['pixel_attr']
     generated = processing_opts[option](params)
+
+    # normalize to 0 - 255
+    generated = normalize(generated, 0, 255)
 
     reference = imageio.imread(params['reference'])
 
