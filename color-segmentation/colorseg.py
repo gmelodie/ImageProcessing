@@ -43,61 +43,64 @@ def read_params():
     return params
 
 
-def euclidean_distance(centroid, pixel):
-    return np.linalg.norm(centroid - pixel)
-
 
 
 
 #================================= K MEANS ===================================
 
+def update_centroids(centroids, clusters, dset):
+
+    # TODO: use np.mean(new_array[new_array == 0], axis=0)...
+    pass
+
+
 def kmeans(params, dset):
 
     # unpack parameters
     seed = params['seed']
-    k_clusters = params['seed']
-    n_iterations = params['seed']
+    k_clusters = params['k_clusters']
+    n_iterations = params['n_iterations']
 
     # define initial centroids
     random.seed(seed)
-    centroids = np.sort(random.sample(range(0, dset.shape[0]*dset.shape[1]), \
-                                      k_clusters))
+    centroids_idx = np.sort(random.sample(range(0, \
+                            dset.shape[0]*dset.shape[1]), k_clusters))
+
+    # 1D array, each entry contains the cluster to which that pixel belongs
+    clusters = np.zeros(dset.shape[0])
 
     for i in range(n_iterations):
-        for pixel in dset:
-            get_distances = np.vectorize(euclidean_distance)
-            distances = get_distances(centroids, pixel)
+        centroids = dset[centroids_idx]
 
-            # TODO: change to new array
-            pixel = np.argmin(distances)
+        for entry in range(dset):
+            distances = np.sqrt(np.sum(centroids - dset[entry])**2, axis=1)
+            clusters[entry] = np.argmin(distances)
 
-        # TODO: use np.mean(new_array[new_array == 0], axis=0)...
-    pass
+        centroids = update_centroids(centroids, clusters, dset)
+
+
+    return clusters
 
 
 #=========================== PROCESSING FUNCTIONS ============================
 
 
-def rgb(params):
-    original = imageio.imread(params['original'])
+def rgb(params, original):
     segmented = kmeans(params, original)
     pass
 
 
-def rgbxy(params):
-    original = imageio.imread(params['original'])
+def rgbxy(params, original):
     pass
 
 
-def luminance(params):
-    original = imageio.imread(params['original'])
+def luminance(params, original):
     luminance = np.dot(original, [0.299, 0.587, 0.114])
     segmented = kmeans(params, luminance)
     pass
 
 
-def luminancexy(params):
-    original = imageio.imread(params['original'])
+def luminancexy(params, original):
     luminancexy = np.dot(original, [0.299, 0.587, 0.114])
     #TODO: add x and y in luminancexy
     segmented = kmeans(params, luminancexy)
@@ -117,16 +120,17 @@ if __name__ == '__main__':
         4: luminancexy,
     }
 
-    # call processing function
+    # segment image
     option = params['pixel_attr']
-    generated = processing_opts[option](params)
+    original = imageio.imread(params['original'])
+    clusters = processing_opts[option](params, original)
+    generated = np.reshape(clusters, original.shape)
 
-    # normalize to 0 - 255
-    generated = normalize(generated, 0, 255)
+    norm_generated = normalize(generated, 0, 255)
 
     reference = imageio.imread(params['reference'])
 
-    error = compute_error(reference, generated)
+    error = compute_error(reference, norm_generated)
     print('{0:.4f}'.format(error))
 
 
