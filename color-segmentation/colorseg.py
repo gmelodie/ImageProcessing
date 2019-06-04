@@ -114,30 +114,56 @@ def kmeans(params, dset):
 
 #=========================== PROCESSING FUNCTIONS ============================
 
-
-def rgb(params, original):
-    dset = np.reshape(original, (original.shape[0] * original.shape[1], 3))
+def segment_dset(params, dset):
     classifications = kmeans(params, dset)
     segmented = np.reshape(classifications, \
                            (original.shape[0], original.shape[1]))
     return segmented
 
 
+def rgb(params, original):
+    dset = np.reshape(original, (original.shape[0] * original.shape[1], 3))
+    return segment_dset(params, dset)
+
+
 def rgbxy(params, original):
-    # TODO: include xy fields
-    pass
+    dset = np.reshape(original, (original.shape[0] * original.shape[1], 3))
+
+    # include xy fields
+    dset_xy = np.zeros((original.shape[0] * original.shape[1], 5))
+    dset_xy[:,:-2] = dset
+    for x in range(original.shape[0]):
+        for y in range(original.shape[1]):
+            dset_xy[x*y][3] = x
+            dset_xy[x*y][4] = y
+
+    return segment_dset(params, dset_xy)
 
 
 def luminance(params, original):
-    # TODO: include xy fields
-    luminance = np.dot(original, [0.299, 0.587, 0.114])
-    pass
+    rehsaped_original = np.reshape(original, \
+                                   (original.shape[0] * original.shape[1], 3))
+    luminance = np.dot(reshaped_original, [0.299, 0.587, 0.114])
+    luminance = np.reshape(luminance, (len(luminance), 1))
+
+    return segment_dset(params, luminance)
 
 
 def luminancexy(params, original):
-    # TODO: include xy fields
-    luminancexy = np.dot(original, [0.299, 0.587, 0.114])
-    pass
+    rehsaped_original = np.reshape(original, \
+                                   (original.shape[0] * original.shape[1], 3))
+    luminance = np.dot(reshaped_original, [0.299, 0.587, 0.114])
+    luminance = np.reshape(luminance, (len(luminance), 1))
+
+    # include xy fields
+    luminance_xy = np.zeros((original.shape[0] * original.shape[1], 3))
+    luminance_xy[:,:-2] = luminance
+    for x in range(original.shape[0]):
+        for y in range(original.shape[1]):
+            luminance_xy[x*y][3] = x
+            luminance_xy[x*y][4] = y
+
+    return segment_dset(params, luminance_xy)
 
 
 #=============================================================================
