@@ -141,7 +141,7 @@ def rgbxy(params, original):
 
 
 def luminance(params, original):
-    rehsaped_original = np.reshape(original, \
+    reshaped_original = np.reshape(original, \
                                    (original.shape[0] * original.shape[1], 3))
     luminance = np.dot(reshaped_original, [0.299, 0.587, 0.114])
     luminance = np.reshape(luminance, (len(luminance), 1))
@@ -150,7 +150,7 @@ def luminance(params, original):
 
 
 def luminancexy(params, original):
-    rehsaped_original = np.reshape(original, \
+    reshaped_original = np.reshape(original, \
                                    (original.shape[0] * original.shape[1], 3))
     luminance = np.dot(reshaped_original, [0.299, 0.587, 0.114])
     luminance = np.reshape(luminance, (len(luminance), 1))
@@ -160,8 +160,8 @@ def luminancexy(params, original):
     luminance_xy[:,:-2] = luminance
     for x in range(original.shape[0]):
         for y in range(original.shape[1]):
-            luminance_xy[x*y][3] = x
-            luminance_xy[x*y][4] = y
+            luminance_xy[x*y][1] = x
+            luminance_xy[x*y][2] = y
 
     return segment_dset(params, luminance_xy)
 
