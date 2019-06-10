@@ -57,7 +57,6 @@ def read_params():
 def update_centroids(centroids, classifications, dset):
 
     # TODO: use np.mean(new_array[new_array == 0], axis=0)...
-    # TODO: KILL THIS UGLY CODE
     for centroid_idx in range(len(centroids)):
         mean_count_aux = 0
         mean_sum_aux = np.zeros(dset[0].shape)
@@ -107,7 +106,13 @@ def kmeans(params, dset):
             print('centroids')
             print(centroids)
 
-        centroids = update_centroids(centroids, classifications, dset)
+        newcentroids = update_centroids(centroids, classifications, dset)
+
+        # check for convergence
+        if newcentroids == centroids: # kmeans already converged
+            return classifications
+        else:
+            centroids = newcentroids
 
     return classifications
 
