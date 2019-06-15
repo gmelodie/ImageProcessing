@@ -109,7 +109,7 @@ def kmeans(params, dset):
         newcentroids = update_centroids(centroids, classifications, dset)
 
         # check for convergence
-        if newcentroids == centroids: # kmeans already converged
+        if np.array_equal(newcentroids, centroids): # kmeans already converged
             return classifications
         else:
             centroids = newcentroids
@@ -196,7 +196,7 @@ if __name__ == '__main__':
     generated = processing_opts[option](params, original)
 
     norm_generated = normalize(generated, 0, 255)
-    reference = imageio.imread(params['reference'])
+    reference = np.load(params['reference'])
     error = compute_error(reference, norm_generated)
     print('{0:.4f}'.format(error))
 
