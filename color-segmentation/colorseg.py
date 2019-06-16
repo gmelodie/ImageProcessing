@@ -10,6 +10,7 @@ import numpy as np
 import imageio, random, sys
 
 
+
 def normalize(img, new_min, new_max):
     old_min=np.min(img)
     old_max=np.max(img)
@@ -120,6 +121,7 @@ def kmeans(params, dset):
 #=========================== PROCESSING FUNCTIONS ============================
 
 def segment_dset(params, dset):
+    dset = dset.astype(np.float64)
     classifications = kmeans(params, dset)
     segmented = np.reshape(classifications, \
                            (original.shape[0], original.shape[1]))
@@ -196,6 +198,12 @@ if __name__ == '__main__':
     generated = processing_opts[option](params, original)
 
     norm_generated = normalize(generated, 0, 255)
+
+    if debug:
+        import matplotlib.pyplot as plt
+        plt.imshow(norm_generated, cmap='gray')
+        plt.show()
+
     reference = np.load(params['reference'])
     error = compute_error(reference, norm_generated)
     print('{0:.4f}'.format(error))
