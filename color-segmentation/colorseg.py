@@ -124,7 +124,7 @@ def kmeans(params, dset):
 
 #=========================== PROCESSING FUNCTIONS ============================
 
-def segment_dset(params, dset):
+def segment_dset(params, dset, original):
     dset = dset.astype(np.float64)
     classifications = kmeans(params, dset)
     segmented = np.reshape(classifications, \
@@ -134,8 +134,9 @@ def segment_dset(params, dset):
 
 def rgb(params, original):
     dset = np.reshape(original, (original.shape[0] * original.shape[1], 3))
-    print(dset)
-    return segment_dset(params, dset)
+    if debug:
+        print(dset)
+    return segment_dset(params, dset, original)
 
 
 def rgbxy(params, original):
@@ -146,10 +147,10 @@ def rgbxy(params, original):
     dset_xy[:,:-2] = dset
     for x in range(original.shape[0]):
         for y in range(original.shape[1]):
-            dset_xy[x*y][3] = x
-            dset_xy[x*y][4] = y
+            dset_xy[x*original.shape[1] + y][3] = x
+            dset_xy[x*original.shape[1] + y][4] = y
 
-    return segment_dset(params, dset_xy)
+    return segment_dset(params, dset_xy, original)
 
 
 def luminance(params, original):
@@ -158,7 +159,7 @@ def luminance(params, original):
     luminance = np.dot(reshaped_original, [0.299, 0.587, 0.114])
     luminance = np.reshape(luminance, (len(luminance), 1))
 
-    return segment_dset(params, luminance)
+    return segment_dset(params, luminance, original)
 
 
 def luminancexy(params, original):
@@ -172,10 +173,10 @@ def luminancexy(params, original):
     luminance_xy[:,:-2] = luminance
     for x in range(original.shape[0]):
         for y in range(original.shape[1]):
-            luminance_xy[x*y][1] = x
-            luminance_xy[x*y][2] = y
+            luminance_xy[x*original.shape[1] + y][1] = x
+            luminance_xy[x*original.shape[1] + y][2] = y
 
-    return segment_dset(params, luminance_xy)
+    return segment_dset(params, luminance_xy, original)
 
 
 #=============================================================================
