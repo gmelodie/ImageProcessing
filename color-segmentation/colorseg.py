@@ -56,6 +56,7 @@ def read_params():
 #================================= K MEANS ===================================
 
 def update_centroids(centroids, classifications, dset):
+    newcentroids = np.copy(centroids)
 
     # TODO: use np.mean(new_array[new_array == 0], axis=0)...
     for centroid_idx in range(len(centroids)):
@@ -69,9 +70,9 @@ def update_centroids(centroids, classifications, dset):
                 mean_sum_aux += dset[entry_idx]
 
         if mean_count_aux != 0:
-            centroids[centroid_idx] = mean_sum_aux / mean_count_aux
+            newcentroids[centroid_idx] = mean_sum_aux / mean_count_aux
 
-    return centroids
+    return newcentroids
 
 
 def kmeans(params, dset):
@@ -111,6 +112,9 @@ def kmeans(params, dset):
 
         # check for convergence
         if np.array_equal(newcentroids, centroids): # kmeans already converged
+            if debug:
+                print('new controids')
+                print(newcentroids)
             return classifications
         else:
             centroids = newcentroids
@@ -130,6 +134,7 @@ def segment_dset(params, dset):
 
 def rgb(params, original):
     dset = np.reshape(original, (original.shape[0] * original.shape[1], 3))
+    print(dset)
     return segment_dset(params, dset)
 
 
