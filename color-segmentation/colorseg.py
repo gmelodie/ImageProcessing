@@ -58,7 +58,6 @@ def read_params():
 def update_centroids(centroids, classifications, dset):
     newcentroids = np.copy(centroids)
 
-    # TODO: use np.mean(new_array[new_array == 0], axis=0)...
     for centroid_idx in range(len(centroids)):
         mean_count_aux = 0
         mean_sum_aux = np.zeros(dset[0].shape)
